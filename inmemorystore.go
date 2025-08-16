@@ -1,8 +1,6 @@
 package gosessionmanager
 
 import (
-	"errors"
-
 	"github.com/google/uuid"
 )
 
@@ -29,7 +27,7 @@ func (store *storeInMemory) GetSession(id string) (*Session, error) {
 	if session, ok := store.sessions[id]; ok {
 		return &session, nil
 	}
-	return nil, errors.New("session not found")
+	return nil, ErrNoSession
 }
 
 func (store *storeInMemory) EndSession(session *Session) error {
@@ -37,5 +35,5 @@ func (store *storeInMemory) EndSession(session *Session) error {
 		delete(store.sessions, session.ID)
 		return nil
 	}
-	return errors.New("session not found")
+	return ErrNoSession
 }
