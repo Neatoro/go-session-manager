@@ -54,3 +54,33 @@ func (manager *SessionManager) EndSession(ctx context.Context) error {
 	err = manager.store.EndSession(session)
 	return err
 }
+
+func (manager *SessionManager) Value(ctx context.Context, key string) (any, error) {
+	sessionId := ctx.Value(sessionKey)
+	if sessionId == nil {
+		return nil, ErrNoSession
+	}
+
+	session, err := manager.store.GetSession(sessionId.(string))
+	if err != nil {
+		return nil, ErrNoSession
+	}
+
+	return session.Data[key], nil
+}
+
+func (manager *SessionManager) SetValue(ctx context.Context, key string, value any) error {
+	sessionId := ctx.Value(sessionKey)
+	if sessionId == nil {
+		return ErrNoSession
+	}
+
+	session, err := manager.store.GetSession(sessionId.(string))
+	if err != nil {
+		return ErrNoSession
+	}
+
+	session.Data[key] = value
+
+	return nil
+}
