@@ -163,7 +163,7 @@ func TestValueReturnsErrorIfSessionNotFound(t *testing.T) {
 
 func TestSetValueSetsValue(t *testing.T) {
 	store := newStoreStub(map[string]Session{
-		"session-id-1": Session{
+		"session-id-1": {
 			ID:   "session-id-1",
 			Data: map[string]any{},
 		},
