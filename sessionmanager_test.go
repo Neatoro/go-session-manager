@@ -39,6 +39,13 @@ func newStoreStub(stubedSessions map[string]Session) SessionStore {
 	return &StoreStub{stubedSessions}
 }
 
+func TestNewInMemorySessionManager(t *testing.T) {
+	manager := NewInMemorySessionManager()
+	if manager.store == nil {
+		t.Error("Expected store to be initialized, got nil")
+	}
+}
+
 func TestShouldStartANewSession(t *testing.T) {
 	store := newStoreStub(map[string]Session{})
 	sessionManager := SessionManager{store}
