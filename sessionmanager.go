@@ -41,16 +41,44 @@ func (manager *SessionManager) StartSession(ctx context.Context) (context.Contex
 }
 
 func (manager *SessionManager) EndSession(ctx context.Context) error {
-	sessionId := ctx.Value(sessionKey)
-	if sessionId == nil {
-		return ErrNoSession
-	}
-
-	session, err := manager.store.GetSession(sessionId.(string))
+	session, err := manager.unpackSession(ctx)
 	if err != nil {
-		return ErrNoSession
+		return err
 	}
 
 	err = manager.store.EndSession(session)
 	return err
+}
+
+func (manager *SessionManager) Value(ctx context.Context, key string) (any, error) {
+	session, err := manager.unpackSession(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return session.Data[key], nil
+}
+
+func (manager *SessionManager) SetValue(ctx context.Context, key string, value any) error {
+	session, err := manager.unpackSession(ctx)
+	if err != nil {
+		return err
+	}
+
+	session.Data[key] = value
+
+	return nil
+}
+
+func (manager *SessionManager) unpackSession(ctx context.Context) (*Session, error) {
+	sessionId := ctx.Value(sessionKey)
+	if sessionId == nil {
+		return nil, ErrNoSession
+	}
+
+	session, err := manager.store.GetSession(sessionId.(string))
+	if err != nil {
+		return nil, ErrNoSession
+	}
+	return session, nil
 }

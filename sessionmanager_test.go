@@ -39,6 +39,13 @@ func newStoreStub(stubedSessions map[string]Session) SessionStore {
 	return &StoreStub{stubedSessions}
 }
 
+func TestNewInMemorySessionManager(t *testing.T) {
+	manager := NewInMemorySessionManager()
+	if manager.store == nil {
+		t.Error("Expected store to be initialized, got nil")
+	}
+}
+
 func TestShouldStartANewSession(t *testing.T) {
 	store := newStoreStub(map[string]Session{})
 	sessionManager := SessionManager{store}
@@ -57,7 +64,7 @@ func TestShouldStartANewSession(t *testing.T) {
 func TestShouldEndSession(t *testing.T) {
 	ctx := context.WithValue(context.Background(), sessionKey, "session-id-1")
 	store := newStoreStub(map[string]Session{
-		"session-id-1": Session{
+		"session-id-1": {
 			ID:   "session-id-1",
 			Data: map[string]any{},
 		},
@@ -86,5 +93,112 @@ func TestReturnErrorIfSessionDoesNotExist(t *testing.T) {
 	err := sessionManager.EndSession(context.WithValue(context.Background(), sessionKey, "session-id-1"))
 	if !errors.Is(err, ErrNoSession) {
 		t.Error("TestReturnErrorIfSessionDoesNotExist failed")
+	}
+}
+func TestValueReturnsCorrectValue(t *testing.T) {
+	store := newStoreStub(map[string]Session{
+		"session-id-1": {
+			ID:   "session-id-1",
+			Data: map[string]any{"foo": "bar"},
+		},
+	})
+	manager := SessionManager{store}
+	ctx := context.WithValue(context.Background(), sessionKey, "session-id-1")
+
+	val, err := manager.Value(ctx, "foo")
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+	if val != "bar" {
+		t.Errorf("Expected value 'bar', got %v", val)
+	}
+}
+
+func TestValueReturnsNilForMissingKey(t *testing.T) {
+	store := newStoreStub(map[string]Session{
+		"session-id-1": {
+			ID:   "session-id-1",
+			Data: map[string]any{},
+		},
+	})
+	manager := SessionManager{store}
+	ctx := context.WithValue(context.Background(), sessionKey, "session-id-1")
+
+	val, err := manager.Value(ctx, "missing")
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+	if val != nil {
+		t.Errorf("Expected nil for missing key, got %v", val)
+	}
+}
+
+func TestValueReturnsErrorIfNoSessionInContext(t *testing.T) {
+	store := newStoreStub(map[string]Session{})
+	manager := SessionManager{store}
+	ctx := context.Background()
+
+	val, err := manager.Value(ctx, "foo")
+	if !errors.Is(err, ErrNoSession) {
+		t.Errorf("Expected ErrNoSession, got %v", err)
+	}
+	if val != nil {
+		t.Errorf("Expected nil value, got %v", val)
+	}
+}
+
+func TestValueReturnsErrorIfSessionNotFound(t *testing.T) {
+	store := newStoreStub(map[string]Session{})
+	manager := SessionManager{store}
+	ctx := context.WithValue(context.Background(), sessionKey, "session-id-1")
+
+	val, err := manager.Value(ctx, "foo")
+	if !errors.Is(err, ErrNoSession) {
+		t.Errorf("Expected ErrNoSession, got %v", err)
+	}
+	if val != nil {
+		t.Errorf("Expected nil value, got %v", val)
+	}
+}
+
+func TestSetValueSetsValue(t *testing.T) {
+	store := newStoreStub(map[string]Session{
+		"session-id-1": {
+			ID:   "session-id-1",
+			Data: map[string]any{},
+		},
+	})
+	manager := SessionManager{store}
+	ctx := context.WithValue(context.Background(), sessionKey, "session-id-1")
+
+	err := manager.SetValue(ctx, "foo", "bar")
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+	val, _ := manager.Value(ctx, "foo")
+	if val != "bar" {
+		t.Errorf("Expected value 'bar', got %v", val)
+	}
+}
+
+func TestSetValueReturnsErrorIfNoSessionInContext(t *testing.T) {
+	store := newStoreStub(map[string]Session{})
+	manager := SessionManager{store}
+	ctx := context.Background()
+
+	err := manager.SetValue(ctx, "foo", "bar")
+	if !errors.Is(err, ErrNoSession) {
+		t.Errorf("Expected ErrNoSession, got %v", err)
+	}
+}
+
+func TestSetValueReturnsErrorIfSessionNotFound(t *testing.T) {
+	store := newStoreStub(map[string]Session{})
+	manager := SessionManager{store}
+	ctx := context.WithValue(context.Background(), sessionKey, "session-id-1")
+
+	err := manager.SetValue(ctx, "foo", "bar")
+	if !errors.Is(err, ErrNoSession) {
+		t.Errorf("Expected ErrNoSession, got %v", err)
 	}
 }
