@@ -59,3 +59,12 @@ func TestEndSession(t *testing.T) {
 		t.Errorf("expected ErrNoSession, got %v", err)
 	}
 }
+
+func TestUpdateSessionReturnsNil(t *testing.T) {
+	store := NewInMemoryStore()
+	session, _ := store.StartSession()
+	err := store.UpdateSession(session)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+}

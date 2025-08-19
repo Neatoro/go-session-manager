@@ -8,7 +8,8 @@ import (
 )
 
 type StoreStub struct {
-	stubedSessions map[string]Session
+	numberOfUpdates int
+	stubedSessions  map[string]Session
 }
 
 func (s *StoreStub) EndSession(session *Session) error {
@@ -21,6 +22,11 @@ func (s *StoreStub) GetSession(id string) (*Session, error) {
 		return &session, nil
 	}
 	return nil, ErrNoSession
+}
+
+func (store *StoreStub) UpdateSession(session *Session) error {
+	store.numberOfUpdates++
+	return nil
 }
 
 func (s *StoreStub) StartSession() (*Session, error) {
@@ -36,7 +42,10 @@ func (s *StoreStub) StartSession() (*Session, error) {
 }
 
 func newStoreStub(stubedSessions map[string]Session) SessionStore {
-	return &StoreStub{stubedSessions}
+	return &StoreStub{
+		stubedSessions:  stubedSessions,
+		numberOfUpdates: 0,
+	}
 }
 
 func TestNewInMemorySessionManager(t *testing.T) {
@@ -200,5 +209,25 @@ func TestSetValueReturnsErrorIfSessionNotFound(t *testing.T) {
 	err := manager.SetValue(ctx, "foo", "bar")
 	if !errors.Is(err, ErrNoSession) {
 		t.Errorf("Expected ErrNoSession, got %v", err)
+	}
+}
+
+func TestSetValueCallsUpdateSession(t *testing.T) {
+	store := newStoreStub(map[string]Session{
+		"session-id-1": {
+			ID:   "session-id-1",
+			Data: map[string]any{},
+		},
+	})
+	manager := SessionManager{store}
+	ctx := context.WithValue(context.Background(), sessionKey, "session-id-1")
+
+	err := manager.SetValue(ctx, "foo", "bar")
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+
+	if store.(*StoreStub).numberOfUpdates != 1 {
+		t.Errorf("Expected update 1 call, got %v calls", store.(*StoreStub).numberOfUpdates)
 	}
 }
