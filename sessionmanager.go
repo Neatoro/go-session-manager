@@ -12,6 +12,7 @@ type SessionManager struct {
 type SessionStore interface {
 	StartSession() (*Session, error)
 	GetSession(id string) (*Session, error)
+	UpdateSession(session *Session) error
 	EndSession(session *Session) error
 }
 
@@ -67,7 +68,7 @@ func (manager *SessionManager) SetValue(ctx context.Context, key string, value a
 
 	session.Data[key] = value
 
-	return nil
+	return manager.store.UpdateSession(session)
 }
 
 func (manager *SessionManager) unpackSession(ctx context.Context) (*Session, error) {

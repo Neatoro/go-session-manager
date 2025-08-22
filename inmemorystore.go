@@ -30,6 +30,10 @@ func (store *storeInMemory) GetSession(id string) (*Session, error) {
 	return nil, ErrNoSession
 }
 
+func (store *storeInMemory) UpdateSession(session *Session) error {
+	return nil
+}
+
 func (store *storeInMemory) EndSession(session *Session) error {
 	if _, ok := store.sessions[session.ID]; ok {
 		delete(store.sessions, session.ID)
