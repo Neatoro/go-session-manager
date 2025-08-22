@@ -1,9 +1,5 @@
 package gosessionmanager
 
-import (
-	"github.com/google/uuid"
-)
-
 type storeInMemory struct {
 	sessions map[string]Session
 }
@@ -14,9 +10,9 @@ func NewInMemoryStore() SessionStore {
 	}
 }
 
-func (store *storeInMemory) StartSession() (*Session, error) {
+func (store *storeInMemory) StartSession(id string) (*Session, error) {
 	session := Session{
-		ID:   uuid.NewString(),
+		ID:   id,
 		Data: make(map[string]any),
 	}
 	store.sessions[session.ID] = session

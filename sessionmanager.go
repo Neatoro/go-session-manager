@@ -3,6 +3,8 @@ package gosessionmanager
 import (
 	"context"
 	"errors"
+
+	"github.com/google/uuid"
 )
 
 type SessionManager struct {
@@ -10,7 +12,7 @@ type SessionManager struct {
 }
 
 type SessionStore interface {
-	StartSession() (*Session, error)
+	StartSession(id string) (*Session, error)
 	GetSession(id string) (*Session, error)
 	UpdateSession(session *Session) error
 	EndSession(session *Session) error
@@ -35,7 +37,8 @@ var ErrFailedStartingSession = errors.New("failed to start session")
 var ErrNoSession = errors.New("no session found to end")
 
 func (manager *SessionManager) StartSession(ctx context.Context) (context.Context, error) {
-	if session, err := manager.store.StartSession(); err == nil {
+	id := uuid.NewString()
+	if session, err := manager.store.StartSession(id); err == nil {
 		return context.WithValue(ctx, sessionKey, session.ID), nil
 	}
 	return nil, ErrFailedStartingSession

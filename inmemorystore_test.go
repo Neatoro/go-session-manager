@@ -1,25 +1,20 @@
 package gosessionmanager
 
 import (
-	"math/rand"
 	"testing"
-
-	"github.com/google/uuid"
 )
 
 func TestStartSession(t *testing.T) {
-	uuid.SetRand(rand.New(rand.NewSource(1)))
-
 	store := NewInMemoryStore()
-	session, err := store.StartSession()
+	session, err := store.StartSession("some-session-id")
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
 	if session == nil {
 		t.Fatal("expected session, got nil")
 	}
-	if session.ID != "52fdfc07-2182-454f-963f-5f0f9a621d72" {
-		t.Errorf("expected session ID %v to be set to 52fdfc07-2182-454f-963f-5f0f9a621d72", session.ID)
+	if session.ID != "some-session-id" {
+		t.Errorf("expected session ID %v to be set to some-session-id", session.ID)
 	}
 	if session.Data == nil {
 		t.Error("expected session data to be initialized")
@@ -28,13 +23,13 @@ func TestStartSession(t *testing.T) {
 
 func TestGetSession(t *testing.T) {
 	store := NewInMemoryStore()
-	session, _ := store.StartSession()
-	got, err := store.GetSession(session.ID)
+	store.StartSession("some-session-id")
+	got, err := store.GetSession("some-session-id")
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
-	if got == nil || got.ID != session.ID {
-		t.Errorf("expected session ID %v, got %v", session.ID, got)
+	if got == nil || got.ID != "some-session-id" {
+		t.Errorf("expected session ID %v, got %v", "some-session-id", got)
 	}
 }
 
@@ -48,7 +43,7 @@ func TestGetSessionShouldReturnErrorIfNotExisting(t *testing.T) {
 
 func TestEndSession(t *testing.T) {
 	store := NewInMemoryStore()
-	session, _ := store.StartSession()
+	session, _ := store.StartSession("some-session-id")
 	err := store.EndSession(session)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
@@ -62,7 +57,7 @@ func TestEndSession(t *testing.T) {
 
 func TestUpdateSessionReturnsNil(t *testing.T) {
 	store := NewInMemoryStore()
-	session, _ := store.StartSession()
+	session, _ := store.StartSession("some-session-id")
 	err := store.UpdateSession(session)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)

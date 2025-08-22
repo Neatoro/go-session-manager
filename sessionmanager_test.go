@@ -3,7 +3,6 @@ package gosessionmanager
 import (
 	"context"
 	"errors"
-	"strconv"
 	"testing"
 )
 
@@ -29,10 +28,9 @@ func (store *StoreStub) UpdateSession(session *Session) error {
 	return nil
 }
 
-func (s *StoreStub) StartSession() (*Session, error) {
-	sessionCount := len(s.stubedSessions)
+func (s *StoreStub) StartSession(id string) (*Session, error) {
 	session := Session{
-		ID:   "session-id-" + strconv.FormatInt(int64(sessionCount), 10),
+		ID:   id,
 		Data: make(map[string]any),
 	}
 
